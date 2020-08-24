@@ -1,6 +1,5 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const addEmployee = require("./functions/addEmployees");
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -54,49 +53,86 @@ async function employeeTracker() {
         addEmployee();
         break;
       case "View All Employees by Department":
-        // async function viewByDepartment() {
-        try {
-          let { choice } = await inquirer.prompt({
-            name: "choice",
-            message: "What would you like to do?",
-            choices: ["Coaching Staff", "Player"],
-            type: "list",
-          });
-          switch (choice) {
-            case "Coaching Staff":
-              let coachingstaff = await queryAsync(
-                `select  department.name, first_name, last_name, title from cms_db.department
-                          inner join role on department.id = role.department_id
-                          inner join employee on employee.role_id = role.id
-                          WHERE department.name = "Coaching Staff"`
-              );
-              console.table(coachingstaff);
-              employeeTracker();
-              break;
-            case "Player":
-              let players = await queryAsync(
-                `select  department.name, first_name, last_name, title from cms_db.department
-                            inner join role on department.id = role.department_id
-                            inner join employee on employee.role_id = role.id
-                            WHERE department.name = "Player"`
-              );
-              console.table(players);
-              employeeTracker();
-              break;
-            case "exit": {
-              connection.end();
-            }
-            default:
-              break;
-          }
-        } catch (err) {
-          console.log(err);
-          connection.end();
-        }
-        // }
-
+        viewByDepartment();
         break;
       case "Add Role":
+        employeeTracker();
+        break;
+      case "exit": {
+        connection.end();
+      }
+      default:
+        break;
+    }
+  } catch (err) {
+    console.log(err);
+    connection.end();
+  }
+}
+
+function addEmployee() {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "firstName",
+        message: "What is the first name of employee?",
+      },
+      {
+        type: "input",
+        name: "lastName",
+        message: "What is the last name of employee?",
+      },
+      {
+        type: "input",
+        name: "roleId",
+        message: "What is the role ID of the employee?",
+      },
+      {
+        type: "input",
+        name: "managerId",
+        message: "What is the manager ID of employee?",
+      },
+    ])
+    .then((res) => {
+      connection.query(
+        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
+        [res.firstName, res.lastName, res.roleId, res.managerId],
+        (err, data) => {
+          if (err) return err;
+          employeeTracker();
+        }
+      );
+    });
+}
+
+async function viewByDepartment() {
+  try {
+    let { choice } = await inquirer.prompt({
+      name: "choice",
+      message: "What would you like to do?",
+      choices: ["Coaching Staff", "Player"],
+      type: "list",
+    });
+    switch (choice) {
+      case "Coaching Staff":
+        let coachingstaff = await queryAsync(
+          `select  department.name, first_name, last_name, title from cms_db.department
+                    inner join role on department.id = role.department_id
+                    inner join employee on employee.role_id = role.id
+                    WHERE department.name = "Coaching Staff"`
+        );
+        console.table(coachingstaff);
+        employeeTracker();
+        break;
+      case "Player":
+        let players = await queryAsync(
+          `select  department.name, first_name, last_name, title from cms_db.department
+                      inner join role on department.id = role.department_id
+                      inner join employee on employee.role_id = role.id
+                      WHERE department.name = "Player"`
+        );
+        console.table(players);
         employeeTracker();
         break;
       case "exit": {

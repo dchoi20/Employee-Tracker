@@ -54,7 +54,47 @@ async function employeeTracker() {
         addEmployee();
         break;
       case "View All Employees by Department":
-        employeeTracker();
+        // async function viewByDepartment() {
+        try {
+          let { choice } = await inquirer.prompt({
+            name: "choice",
+            message: "What would you like to do?",
+            choices: ["Coaching Staff", "Player"],
+            type: "list",
+          });
+          switch (choice) {
+            case "Coaching Staff":
+              let coachingstaff = await queryAsync(
+                `select  department.name, first_name, last_name, title from cms_db.department
+                          inner join role on department.id = role.department_id
+                          inner join employee on employee.role_id = role.id
+                          WHERE department.name = "Coaching Staff"`
+              );
+              console.table(coachingstaff);
+              employeeTracker();
+              break;
+            case "Player":
+              let players = await queryAsync(
+                `select  department.name, first_name, last_name, title from cms_db.department
+                            inner join role on department.id = role.department_id
+                            inner join employee on employee.role_id = role.id
+                            WHERE department.name = "Player"`
+              );
+              console.table(players);
+              employeeTracker();
+              break;
+            case "exit": {
+              connection.end();
+            }
+            default:
+              break;
+          }
+        } catch (err) {
+          console.log(err);
+          connection.end();
+        }
+        // }
+
         break;
       case "Add Role":
         employeeTracker();
